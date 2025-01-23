@@ -36,8 +36,8 @@ export default function RegisterScreen({ navigate }: { navigate: (screen: string
 
       if (response.status === 200) {
         Alert.alert('Sucesso', 'Usuário registrado com sucesso!');
-        // Redireciona para a tela inicial
-        navigate('Home');
+        // Redireciona para a tela de login
+        navigate('Login');
       } else {
         Alert.alert('Erro', 'O registro não foi concluído. Tente novamente.');
       }
