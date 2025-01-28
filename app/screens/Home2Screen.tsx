@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import axios from 'axios';
+import CryptoList from '@/components/CryptoList'; // Certifique-se de que o caminho está correto
 
 export default function Home2Screen({
   walletId,
@@ -44,6 +45,24 @@ export default function Home2Screen({
     setUsdBalance(newBalance);
   };
 
+  const handleWalletUpdate = () => {
+    // Atualiza o saldo após comprar uma criptomoeda
+    if (walletId) {
+      setLoading(true);
+      axios
+  .get<BalanceResponse>(`http://192.168.0.173:8080/api/wallet/balance/${walletId}`)
+  .then((response) => {
+    setUsdBalance(response.data.usdBalance || 0);
+  })
+  .catch((error) => {
+    console.error('Erro ao atualizar saldo:', error);
+  })
+  .then(() => {
+    setLoading(false);
+  });
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Bem-vindo à Home2</Text>
@@ -72,6 +91,13 @@ export default function Home2Screen({
       >
         <Text style={styles.depositButtonText}>Fazer Depósito</Text>
       </TouchableOpacity>
+
+      {/* Componente de Lista de Criptomoedas */}
+      <CryptoList
+        walletId={walletId}
+        usdBalance={usdBalance || 0}
+        onUpdateWallet={handleWalletUpdate}
+      />
     </View>
   );
 }
