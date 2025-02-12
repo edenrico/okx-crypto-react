@@ -15,9 +15,11 @@ const BASE_URL = 'http://192.168.0.173:8080/api/users/login';
 export default function LoginScreen({
   navigate,
   setWalletId,
+  setUserName, // 🔹 Agora também recebemos setUserName
 }: {
   navigate: (screen: string) => void;
-  setWalletId: (id: string) => void; // Recebe o setter para armazenar o walletId globalmente
+  setWalletId: (id: string) => void;
+  setUserName: (name: string) => void; // 🔹 Novo setter para armazenar o nome do usuário globalmente
 }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,41 +27,36 @@ export default function LoginScreen({
   const [focusedField, setFocusedField] = useState<'email' | 'password' | null>(null);
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Erro', 'Por favor, preencha o e-mail e a senha.');
-      return;
+  if (!email || !password) {
+    Alert.alert('Erro', 'Por favor, preencha o e-mail e a senha.');
+    return;
+  }
+
+  try {
+    setLoading(true);
+    const response = await axios.post(BASE_URL, { email, password });
+
+    if (response.status === 200) {
+      console.log("Resposta do servidor:", response.data); // 🔹 Verifica a resposta da API
+      const { walletId, name, message } = response.data;
+      const userNameFromResponse = name || message; // 🔹 Pegando "name" corretamente
+      
+      Alert.alert('Sucesso', message);
+      setWalletId(walletId); // 🔹 Armazena o walletId globalmente
+      setUserName(userNameFromResponse);; // 🔹 Armazena o nome do usuário globalmente
+      navigate('Home2'); // 🔹 Navega para a tela principal
+    } else {
+      Alert.alert('Erro', 'Credenciais inválidas.');
     }
-
-    try {
-      setLoading(true);
-      const response = await axios.post(BASE_URL, { email, password });
-
-      if (response.status === 200) {
-        const { walletId, message } = response.data; // Captura o walletId e a mensagem do backend
-        Alert.alert('Sucesso', message);
-        setWalletId(walletId); // Armazena o walletId no estado global
-        navigate('Home2'); // Navega para a tela Home2
-      } else {
-        Alert.alert('Erro', 'Credenciais inválidas.');
-      }
-    } catch (err: any) {
-      const errorMessage =
-        err.response?.data?.message || 'Erro ao fazer login. Verifique suas credenciais.';
-      Alert.alert('Erro', errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Se nenhum campo estiver focado, mostra "Login". Caso contrário, "Enter your..."
-  const getTitleMessage = () => {
-    if (focusedField === 'email') return 'Enter your email';
-    if (focusedField === 'password') return 'Enter your password';
-    return 'Login';
-  };
-
-  // Botão desativado se email ou password estiverem vazios
-  const isButtonDisabled = !email || !password;
+  } catch (err: any) {
+    const errorMessage =
+      err.response?.data?.message || 'Erro ao fazer login. Verifique suas credenciais.';
+    Alert.alert('Erro', errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
+ 
 
   return (
     <View style={styles.container}>
@@ -68,10 +65,10 @@ export default function LoginScreen({
         <Text style={styles.closeButtonText}>X</Text>
       </TouchableOpacity>
 
-      {/* Título Dinâmico */}
-      <Text style={styles.dynamicTitle}>{getTitleMessage()}</Text>
+      {/* Título */}
+      <Text style={styles.dynamicTitle}>{focusedField ? `Enter your ${focusedField}` : 'Login'}</Text>
 
-      {/* Sessão de campos e botão */}
+      {/* Campos de Entrada */}
       <View style={styles.content}>
         <Text style={styles.label}>Email</Text>
         <TextInput
@@ -85,9 +82,6 @@ export default function LoginScreen({
           onBlur={() => setFocusedField(null)}
           onChangeText={setEmail}
         />
-        {focusedField === 'email' && (
-          <Text style={styles.forgotText}>Forgot your email?</Text>
-        )}
 
         <Text style={styles.label}>Senha</Text>
         <TextInput
@@ -100,15 +94,12 @@ export default function LoginScreen({
           onBlur={() => setFocusedField(null)}
           onChangeText={setPassword}
         />
-        {focusedField === 'password' && (
-          <Text style={styles.forgotText}>Forgot your password?</Text>
-        )}
 
-        <View style={[styles.buttonContainer, isButtonDisabled && styles.buttonContainerDisabled]}>
+        <View style={[styles.buttonContainer, (!email || !password) && styles.buttonContainerDisabled]}>
           {loading ? (
             <ActivityIndicator size="large" color="#00ff00" />
           ) : (
-            <TouchableOpacity disabled={isButtonDisabled} onPress={handleLogin}>
+            <TouchableOpacity disabled={!email || !password} onPress={handleLogin}>
               <Text style={styles.buttonText}>Login</Text>
             </TouchableOpacity>
           )}
@@ -159,12 +150,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     backgroundColor: '#1C1C1C',
     color: '#fff',
-  },
-  forgotText: {
-    fontSize: 14,
-    color: '#1E90FF',
-    marginBottom: 8,
-    marginLeft: 10,
   },
   buttonContainer: {
     marginTop: 16,

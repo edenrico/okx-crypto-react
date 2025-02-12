@@ -32,7 +32,15 @@ export default function RegisterScreen({ navigate }: { navigate: (screen: string
       const payload = { name, email, password };
 
       // Requisição POST para o back-end
-      const response = await axios.post(BASE_URL, payload);
+      const response = await axios.post(
+        BASE_URL,
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
+      );
 
       if (response.status === 200) {
         Alert.alert('Sucesso', 'Usuário registrado com sucesso!');
