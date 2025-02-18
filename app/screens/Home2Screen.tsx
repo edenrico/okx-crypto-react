@@ -234,6 +234,8 @@ export default function Home2Screen({
   </TouchableOpacity>
 </View>
 
+
+
       {/* Lista de Criptomoedas (com funcionalidades de compra) */}
       <CryptoList
         walletId={walletId}
@@ -300,7 +302,7 @@ const styles = StyleSheet.create({
   },
   // Barra de busca: também ocupa toda a largura
   navBar: {
-    marginTop: 10,
+    marginTop: 12,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#1a1a1a',
@@ -328,7 +330,8 @@ const styles = StyleSheet.create({
   // Container exclusivo para o username centralizado
   userNameContainer: {
     width: '100%',
-    alignItems: 'center',       // Centraliza o conteúdo deste container
+    alignItems: 'center',   
+    marginTop: 15,    // Centraliza o conteúdo deste container
     marginBottom: 20,
   },
   userName: {
