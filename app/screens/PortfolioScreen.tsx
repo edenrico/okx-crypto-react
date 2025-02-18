@@ -48,7 +48,7 @@ export default function PortfolioScreen({ walletId, navigate }: PortfolioScreenP
     <View style={styles.itemContainer}>
       <Text style={styles.itemName}>{item.nome}</Text>
       <Text style={styles.itemDetails}>Preço: ${item.precoAtual.toFixed(2)}</Text>
-      {/* Se desejar exibir a quantidade, adicione aqui */}
+  
     </View>
   );
 
@@ -58,7 +58,7 @@ export default function PortfolioScreen({ walletId, navigate }: PortfolioScreenP
 
   return (
     <View style={styles.container}>
-      {/* Botão para voltar para a tela Home2 */}
+     
       <TouchableOpacity style={styles.button} onPress={() => navigate('Home2')}>
         <Text style={styles.buttonText}>Voltar</Text>
       </TouchableOpacity>
