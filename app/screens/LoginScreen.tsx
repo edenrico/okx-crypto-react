@@ -15,11 +15,11 @@ const BASE_URL = 'http://192.168.0.173:8080/api/users/login';
 export default function LoginScreen({
   navigate,
   setWalletId,
-  setUserName, // 🔹 Agora também recebemos setUserName
+  setUserName, 
 }: {
   navigate: (screen: string) => void;
   setWalletId: (id: string) => void;
-  setUserName: (name: string) => void; // 🔹 Novo setter para armazenar o nome do usuário globalmente
+  setUserName: (name: string) => void; 
 }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -37,14 +37,14 @@ export default function LoginScreen({
     const response = await axios.post(BASE_URL, { email, password });
 
     if (response.status === 200) {
-      console.log("Resposta do servidor:", response.data); // 🔹 Verifica a resposta da API
+      console.log("Resposta do servidor:", response.data); 
       const { walletId, name, message } = response.data;
-      const userNameFromResponse = name || message; // 🔹 Pegando "name" corretamente
+      const userNameFromResponse = name || message; 
       
       Alert.alert('Sucesso', message);
-      setWalletId(walletId); // 🔹 Armazena o walletId globalmente
-      setUserName(userNameFromResponse);; // 🔹 Armazena o nome do usuário globalmente
-      navigate('Home2'); // 🔹 Navega para a tela principal
+      setWalletId(walletId);
+      setUserName(userNameFromResponse);;
+      navigate('Home2');
     } else {
       Alert.alert('Erro', 'Credenciais inválidas.');
     }
@@ -60,15 +60,15 @@ export default function LoginScreen({
 
   return (
     <View style={styles.container}>
-      {/* Botão "X" para voltar */}
+   
       <TouchableOpacity style={styles.closeButton} onPress={() => navigate('Home')}>
         <Text style={styles.closeButtonText}>X</Text>
       </TouchableOpacity>
 
-      {/* Título */}
+
       <Text style={styles.dynamicTitle}>{focusedField ? `Enter your ${focusedField}` : 'Login'}</Text>
 
-      {/* Campos de Entrada */}
+     
       <View style={styles.content}>
         <Text style={styles.label}>Email</Text>
         <TextInput
