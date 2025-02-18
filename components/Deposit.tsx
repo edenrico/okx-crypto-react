@@ -12,7 +12,7 @@ import axios from 'axios';
 
 interface DepositProps {
   walletId: string | null;
-  onDepositSuccess: (newBalance: number) => void; // Função para atualizar Home2Screen
+  onDepositSuccess: (newBalance: number) => void; //atualizar Home2Screen
 }
 
 export default function Deposit({ walletId, onDepositSuccess }: DepositProps) {
@@ -44,10 +44,10 @@ export default function Deposit({ walletId, onDepositSuccess }: DepositProps) {
       );
 
       if (response.status === 200) {
-        const updatedBalance = response.data.usdBalance; // Saldo atualizado
+        const updatedBalance = response.data.usdBalance; // requisita, atualiza 
         Alert.alert('Sucesso', `Depósito realizado com sucesso! Novo saldo: $${updatedBalance.toFixed(2)}`);
         setAmount('');
-        onDepositSuccess(updatedBalance); // Envia o saldo atualizado para a `Home2Screen`
+        onDepositSuccess(updatedBalance); // home2screen ----- saldo 
       } else {
         Alert.alert('Erro', 'Não foi possível realizar o depósito.');
       }
