@@ -194,7 +194,7 @@ export default function Home2Screen({
   /*
     Layout principal da Home2Screen, usando ScrollView e algumas Views:
       - topBar com 3 componentes (dotsSquare, exchangeButton e o giftEmoji)
-      - navBar com o campo de busca (🔍 e TextInput)
+      - navBar com o campo de busca ( e TextInput)
       - Lista de criptos filtradas, se o campo de busca não estiver vazio
       - Exibição do nome do usuário, saldo, botões de depósito e portfólio
       - Componente CryptoList, que mostra as criptos com possibilidade de comprar/vender
@@ -228,7 +228,7 @@ export default function Home2Screen({
         <Text style={styles.giftEmoji}>🎁</Text>
       </View>
 
-      {/* Barra de busca (icone 🔍 + input) */}
+      {/* Barra de busca (icone  + input) */}
       <View style={styles.navBar}>
         <Text style={styles.searchIcon}>🔍</Text>
         <TextInput
