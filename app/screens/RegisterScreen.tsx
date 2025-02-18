@@ -28,10 +28,10 @@ export default function RegisterScreen({ navigate }: { navigate: (screen: string
     try {
       setLoading(true);
 
-      // Dados do usuário a serem enviados
+      
       const payload = { name, email, password };
 
-      // Requisição POST para o back-end
+      // requisicao, lembrar de colocar metodo post 
       const response = await axios.post(
         BASE_URL,
         payload,
@@ -44,14 +44,14 @@ export default function RegisterScreen({ navigate }: { navigate: (screen: string
 
       if (response.status === 200) {
         Alert.alert('Sucesso', 'Usuário registrado com sucesso!');
-        // Redireciona para a tela de login
+    
         navigate('Login');
       } else {
         Alert.alert('Erro', 'O registro não foi concluído. Tente novamente.');
       }
     } catch (err) {
-      // Tipagem explícita de error
-      const error = err as any; // ou AxiosError se usar @types/axios
+      
+      const error = err as any; 
       console.error(error);
       const errorMessage =
         error.response?.data?.message ||
@@ -107,22 +107,22 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     justifyContent: 'center',
-    backgroundColor: '#000', // Fundo preto
+    backgroundColor: '#000',
   },
   title: {
     fontSize: 24,
     marginBottom: 16,
     textAlign: 'center',
-    color: '#fff', // Texto branco
+    color: '#fff', 
   },
   input: {
     height: 44,
-    borderColor: '#555', // Borda mais escura
+    borderColor: '#555', 
     borderWidth: 1,
     marginBottom: 12,
     borderRadius: 8,
     paddingHorizontal: 10,
-    backgroundColor: '#1C1C1C', // Fundo cinza escuro
-    color: '#fff', // Texto branco no campo
+    backgroundColor: '#1C1C1C', 
+    color: '#fff',
   },
 });
