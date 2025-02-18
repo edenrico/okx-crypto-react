@@ -35,13 +35,13 @@ export default function Home2Screen({
   const [usdBalance, setUsdBalance] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Campo de busca e lista completa de cryptos
+
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [allCryptos, setAllCryptos] = useState<Cripto[]>([]);
   const [filteredCryptos, setFilteredCryptos] = useState<Cripto[]>([]);
 
   useEffect(() => {
-    // Busca o saldo da carteira
+  
     const fetchBalance = () => {
       if (!walletId) {
         setUsdBalance(null);
@@ -64,7 +64,7 @@ export default function Home2Screen({
 
     fetchBalance();
 
-    // Busca a lista completa de cryptos
+   
     const fetchAllCryptos = async () => {
       try {
         const response = await axios.get<Cripto[]>('http://192.168.0.173:8080/api/criptos/live-prices');
@@ -88,7 +88,7 @@ export default function Home2Screen({
     fetchAllCryptos();
   }, [walletId]);
 
-  // Filtro para a lista de busca
+
   useEffect(() => {
     if (searchQuery.trim().length === 0) {
       setFilteredCryptos(allCryptos);
@@ -122,7 +122,7 @@ export default function Home2Screen({
     }
   };
 
-  // Renderiza cada item filtrado (lista de busca)
+  
   const renderSearchedCrypto = ({ item }: { item: Cripto }) => (
     <View style={styles.searchItem}>
       <Image source={{ uri: item.imageUrl }} style={styles.searchItemImage} />
@@ -135,13 +135,10 @@ export default function Home2Screen({
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {/* Barra no topo: 
-          [Quadrado de pontinhos (esquerda), 
-           Botão "Exchange" (centro), 
-           Emoji Presente (direita)] */}
+    
       <View style={styles.topBar}>
         
-        {/* Quadrado com 3x3 bolinhas */}
+       
         <TouchableOpacity style={styles.dotsSquare}>
           <View style={styles.dotsRow}>
             <View style={styles.dot} />
@@ -160,16 +157,15 @@ export default function Home2Screen({
           </View>
         </TouchableOpacity>
 
-        {/* Botão Exchange */}
+       
         <TouchableOpacity style={styles.exchangeButton}>
           <Text style={styles.exchangeButtonText}>Exchange</Text>
         </TouchableOpacity>
 
-        {/* Emoji de Presente à direita */}
+      
         <Text style={styles.giftEmoji}>🎁</Text>
       </View>
 
-      {/* Barra de busca (com lupa) */}
       <View style={styles.navBar}>
         <Text style={styles.searchIcon}>🔍</Text>
         <TextInput
@@ -181,7 +177,7 @@ export default function Home2Screen({
         />
       </View>
 
-      {/* Lista de resultados da busca */}
+      
       {filteredCryptos.length > 0 && searchQuery.trim().length > 0 && (
         <View style={styles.searchResultContainer}>
           <FlatList
@@ -234,7 +230,7 @@ export default function Home2Screen({
   </TouchableOpacity>
 </View>
 
-      {/* Lista de Criptomoedas (com funcionalidades de compra) */}
+     
       <CryptoList
         walletId={walletId}
         usdBalance={usdBalance || 0}
@@ -249,19 +245,19 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     backgroundColor: '#000',
-    alignItems: 'flex-start',  // Alinha todos os elementos à esquerda
-    paddingHorizontal: 26,     // Recuo horizontal consistente para todos os elementos
+    alignItems: 'flex-start',  
+    paddingHorizontal: 26,    
     paddingVertical: 16,
   },
-  // Barra superior: ocupa toda a largura
+
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: '100%',               // Garante que a barra ocupe toda a largura
+    width: '100%',              
     justifyContent: 'space-between',
     marginTop: 20,
     marginBottom: 16,
-    // Remova ou ajuste paddingHorizontal se necessário
+ 
   },
   dotsSquare: {
     width: 34,
@@ -298,7 +294,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 6,
   },
-  // Barra de busca: também ocupa toda a largura
+  
   navBar: {
     marginTop: 10,
     flexDirection: 'row',
@@ -320,22 +316,22 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
   },
-  // User data container: ocupa toda a largura
+  
   userDataContainer: {
     width: '100%',
     marginBottom: 16,
   },
-  // Container exclusivo para o username centralizado
+
   userNameContainer: {
     width: '100%',
-    alignItems: 'center',       // Centraliza o conteúdo deste container
+    alignItems: 'center',      
     marginBottom: 20,
   },
   userName: {
     color: '#FFFF',
     fontSize: 18,
     fontWeight: 'bold',
-    textAlign: 'center',        // Centraliza o texto
+    textAlign: 'center',        
   },
   value: {
     color: '#858585',
@@ -356,7 +352,8 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
     paddingBottom: 12,
   },
-  // Container para os botões lado a lado
+
+  
   buttonsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
