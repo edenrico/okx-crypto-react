@@ -34,9 +34,10 @@ export default function CryptoList({ walletId, usdBalance, onUpdateWallet }: Cry
   useEffect(() => {
     const fetchCryptos = async () => {
       try {
-        // Busca os preços do endpoint do seu Spring Boot
+
+        // CONTROLLER CRYPTOCURRENCY
         const response = await axios.get<Cripto[]>('http://192.168.0.173:8080/api/criptos/live-prices');
-        // Mapeamos os dados para incluir a URL da imagem, conforme o nome.
+      
         const cryptosFetched: Cripto[] = response.data.map((item) => {
           let imageUrl = '';
           if (item.nome.toLowerCase() === 'bitcoin') {
@@ -62,7 +63,6 @@ export default function CryptoList({ walletId, usdBalance, onUpdateWallet }: Cry
     fetchCryptos();
   }, []);
 
-  // Função que efetua a compra utilizando a quantidade informada e a crypto selecionada
   const confirmBuyCrypto = async (quantidade: number) => {
     if (!walletId || !selectedCrypto) {
       alert('Wallet ou criptomoeda não disponível.');
@@ -76,7 +76,8 @@ export default function CryptoList({ walletId, usdBalance, onUpdateWallet }: Cry
     }
 
     try {
-      // O backend espera os parâmetros via query string
+
+      // WALLET CONTROLLER
       await axios.post(`http://192.168.0.173:8080/api/wallet/${walletId}/buy-crypto?criptoNome=${selectedCrypto.nome}&quantidade=${quantidade}`);
       alert(`${selectedCrypto.nome} comprado com sucesso!`);
       onUpdateWallet();
@@ -86,13 +87,13 @@ export default function CryptoList({ walletId, usdBalance, onUpdateWallet }: Cry
     }
   };
 
-  // Ao clicar no botão "Comprar" de uma criptomoeda, define a crypto selecionada e abre o modal
+
   const handleBuyButtonPress = (crypto: Cripto) => {
     setSelectedCrypto(crypto);
     setModalVisible(true);
   };
 
-  // Ao confirmar a quantidade, valida e chama a função de compra
+ 
   const handleConfirmPress = () => {
     const quantidade = parseFloat(quantityInput);
     if (isNaN(quantidade) || quantidade <= 0) {
@@ -112,7 +113,7 @@ export default function CryptoList({ walletId, usdBalance, onUpdateWallet }: Cry
     return <Text style={styles.errorText}>Erro ao carregar informações das criptomoedas.</Text>;
   }
 
-  // Renderiza cada item (criptomoeda) como uma linha horizontal sem borda
+
   const renderCryptoItem = ({ item }: { item: Cripto }) => (
     <View style={styles.itemRow}>
       <Image 
@@ -139,7 +140,7 @@ export default function CryptoList({ walletId, usdBalance, onUpdateWallet }: Cry
         contentContainerStyle={styles.listContainer}
       />
 
-      {/* Modal para entrada de quantidade */}
+  
       <Modal
         animationType="slide"
         transparent={true}
@@ -187,7 +188,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textAlign: 'center',
   },
-  // Cada item é uma linha horizontal sem borda e com espaçamento inferior
+
   itemRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -226,7 +227,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
   },
-  // Estilos para o modal
+
+
+  // modal
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
