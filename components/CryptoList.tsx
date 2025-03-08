@@ -8,7 +8,8 @@ import {
   Image,
   Modal,
   TextInput,
-  FlatList
+  FlatList,
+  Alert,
 } from 'react-native';
 import axios from 'axios';
 
@@ -30,7 +31,7 @@ interface Wallet {
 
 interface CryptoListProps {
   walletId: string | null;
-  usdBalance: number;
+  usdBalance: number; // Saldo USD vindo da Home2Screen
   onUpdateWallet: () => void;
 }
 
@@ -41,12 +42,11 @@ export default function CryptoList({ walletId, usdBalance, onUpdateWallet }: Cry
   const [walletData, setWalletData] = useState<Wallet | null>(null);
   const [loadingWallet, setLoadingWallet] = useState<boolean>(true);
 
-  // Modal de compra
   const [modalVisible, setModalVisible] = useState<boolean>(false);
-  const [quantityInput, setQuantityInput] = useState<string>('');
   const [selectedCrypto, setSelectedCrypto] = useState<Cripto | null>(null);
+  const [quantityInput, setQuantityInput] = useState<string>('');
+  const [action, setAction] = useState<'buy' | 'sell' | null>(null);
 
-  // 1) Buscar todas as criptomoedas (13 criptos: 3 originais + 10 adicionais)
   useEffect(() => {
     const fetchAllCryptos = async () => {
       try {
@@ -100,7 +100,6 @@ export default function CryptoList({ walletId, usdBalance, onUpdateWallet }: Cry
           }
           return { ...item, imageUrl, sigla };
         });
-        // Ordena o array de forma decrescente com base no preço atual
         cryptosFetched.sort((a, b) => b.precoAtual - a.precoAtual);
         setCryptos(cryptosFetched);
       } catch (error) {
@@ -112,7 +111,6 @@ export default function CryptoList({ walletId, usdBalance, onUpdateWallet }: Cry
     fetchAllCryptos();
   }, []);
 
-  // 2) Buscar dados da carteira (para exibir Favorites)
   useEffect(() => {
     if (!walletId) {
       setLoadingWallet(false);
@@ -121,6 +119,7 @@ export default function CryptoList({ walletId, usdBalance, onUpdateWallet }: Cry
     const fetchWallet = async () => {
       try {
         const response = await axios.get<Wallet>(`http://192.168.0.173:8080/api/wallet/balance/${walletId}`);
+        console.log('Dados da carteira recebidos:', response.data); // Log para depuração
         setWalletData(response.data);
       } catch (error) {
         console.error('Erro ao buscar carteira:', error);
@@ -131,7 +130,6 @@ export default function CryptoList({ walletId, usdBalance, onUpdateWallet }: Cry
     fetchWallet();
   }, [walletId]);
 
-  // Função para obter os saldos reais da carteira e combinar com as informações das criptos (Favorites)
   const getWalletFavorites = () => {
     if (!walletData) return [];
     const walletBalances = [
@@ -140,9 +138,7 @@ export default function CryptoList({ walletId, usdBalance, onUpdateWallet }: Cry
       { nome: 'XRP', sigla: 'XRP', balance: walletData.xrpBalance },
     ];
     const favorites = walletBalances.map((balanceObj) => {
-      const found = cryptos.find(
-        (c) => c.nome.toLowerCase() === balanceObj.nome.toLowerCase()
-      );
+      const found = cryptos.find(c => c.nome.toLowerCase() === balanceObj.nome.toLowerCase());
       if (found) {
         return { ...found, quantidade: balanceObj.balance };
       } else {
@@ -158,10 +154,11 @@ export default function CryptoList({ walletId, usdBalance, onUpdateWallet }: Cry
     return favorites.filter(item => item.quantidade > 0);
   };
 
-  const dataToShow =
-    activeTab === 'favorites'
-      ? getWalletFavorites()
-      : cryptos;
+  const dataToShow = activeTab === 'favorites' ? getWalletFavorites() : cryptos;
+
+  function calculateTotalBalance() {
+    return usdBalance;
+  }
 
   if (loadingAll || loadingWallet) {
     return <ActivityIndicator size="large" color="#1E90FF" />;
@@ -180,7 +177,13 @@ export default function CryptoList({ walletId, usdBalance, onUpdateWallet }: Cry
   }
 
   const renderCryptoItem = ({ item }: { item: Cripto & { quantidade?: number } }) => (
-    <View style={activeTab === 'favorites' ? styles.favoriteItemRow : styles.itemRow}>
+    <TouchableOpacity
+      style={activeTab === 'favorites' ? styles.favoriteItemRow : styles.itemRow}
+      onPress={() => {
+        setSelectedCrypto(item);
+        setModalVisible(true);
+      }}
+    >
       <Image source={{ uri: item.imageUrl }} style={styles.cryptoImage} />
       <View style={styles.textContainer}>
         <Text style={activeTab === 'favorites' ? styles.favoriteCryptoSigla : styles.cryptoSigla}>
@@ -193,62 +196,111 @@ export default function CryptoList({ walletId, usdBalance, onUpdateWallet }: Cry
       <View style={styles.priceContainer}>
         <Text style={styles.cryptoPrice}>${item.precoAtual.toFixed(2)}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   async function confirmBuyCrypto(qtd: number) {
     if (!walletId || !selectedCrypto) {
-      alert('Wallet ou criptomoeda não disponível.');
+      Alert.alert('Carteira ou criptomoeda não disponível.');
       return;
     }
-    const custoTotal = selectedCrypto.precoAtual * qtd;
-    if (usdBalance < custoTotal) {
-      alert('Saldo insuficiente.');
+    console.log("walletId:", walletId); // Verifique se o walletId é o valor real
+    const totalCost = selectedCrypto.precoAtual * qtd;
+    if (usdBalance < totalCost) {
+      Alert.alert('Saldo insuficiente.');
+      return;
+    }
+    try {
+      const response = await axios.post(
+        `http://192.168.0.173:8080/api/wallet/${walletId}/buy-crypto?criptoNome=${selectedCrypto.nome}&quantidade=${qtd}`
+      );
+      console.log('Resposta da API após compra:', response.data); // Log para verificar
+      Alert.alert(`${selectedCrypto.nome} comprado com sucesso!`);
+      onUpdateWallet();
+      setModalVisible(false);
+      setQuantityInput('');
+    } catch (error) {
+      console.error(`Erro ao comprar ${selectedCrypto.nome}:`, error);
+      Alert.alert(`Erro ao comprar ${selectedCrypto.nome}.`);
+    }
+  }
+
+  async function confirmSellCrypto(qtd: number) {
+    if (!walletId || !selectedCrypto || !walletData) {
+      Alert.alert('Carteira ou criptomoeda não disponível.');
+      return;
+    }
+    let currentCryptoBalance = 0;
+    if (selectedCrypto.nome === 'Bitcoin') currentCryptoBalance = walletData.bitcoinBalance;
+    else if (selectedCrypto.nome === 'Dogecoin') currentCryptoBalance = walletData.dogecoinBalance;
+    else if (selectedCrypto.nome === 'XRP') currentCryptoBalance = walletData.xrpBalance;
+    else if (selectedCrypto.nome === 'Ethereum') {
+      // Verifica se há Ethereum na lista criptosCompradas
+      const hasEthereum = walletData.criptosCompradas.some(cripto => cripto.nome === 'Ethereum');
+      if (!hasEthereum) {
+        Alert.alert('Nenhum Ethereum disponível para venda.');
+        return;
+      }
+      // Para simplificar, assumimos que a quantidade disponível é 1 (ou calcule a quantidade real)
+      currentCryptoBalance = 1; // Ajuste conforme lógica real
+    } else {
+      Alert.alert('Criptomoeda não suportada para venda.');
+      return;
+    }
+    if (currentCryptoBalance + 1e-8 < qtd) {
+      Alert.alert('Saldo insuficiente para venda.');
       return;
     }
     try {
       await axios.post(
-        `http://192.168.0.173:8080/api/wallet/${walletId}/buy-crypto?criptoNome=${selectedCrypto.nome}&quantidade=${qtd}`
+        `http://192.168.0.173:8080/api/wallet/${walletId}/sell-crypto?criptoNome=${selectedCrypto.nome}&quantidade=${qtd}`
       );
-      alert(`${selectedCrypto.nome} comprado com sucesso!`);
+      Alert.alert(`${selectedCrypto.nome} vendido com sucesso!`);
       onUpdateWallet();
+      setModalVisible(false);
+      setQuantityInput('');
     } catch (error) {
-      console.error(`Erro ao comprar ${selectedCrypto.nome}:`, error);
-      alert(`Erro ao comprar ${selectedCrypto.nome}.`);
+      console.error(`Erro ao vender ${selectedCrypto.nome}:`, error);
+      Alert.alert(`Erro ao vender ${selectedCrypto.nome}.`);
     }
   }
 
   function handleConfirmPress() {
     const qtd = parseFloat(quantityInput);
     if (isNaN(qtd) || qtd <= 0) {
-      alert('Por favor, insira um valor válido.');
+      Alert.alert('Por favor, insira um valor válido.');
       return;
     }
-    setModalVisible(false);
-    setQuantityInput('');
-    confirmBuyCrypto(qtd);
+    if (action === 'buy') confirmBuyCrypto(qtd);
+    else if (action === 'sell') confirmSellCrypto(qtd);
   }
 
-  function handleBuyButtonPress(crypto: Cripto) {
-    setSelectedCrypto(crypto);
-    setModalVisible(true);
+  function handleAction(actionType: 'buy' | 'sell') {
+    setAction(actionType);
+    setQuantityInput('');
+  }
+
+  function getCryptoBalance(cryptoName: string): number {
+    if (!walletData) return 0;
+    if (cryptoName === 'Bitcoin') return walletData.bitcoinBalance;
+    if (cryptoName === 'Dogecoin') return walletData.dogecoinBalance;
+    if (cryptoName === 'XRP') return walletData.xrpBalance;
+    if (cryptoName === 'Ethereum') {
+      // Para Ethereum, podemos contar a quantidade na lista criptosCompradas (simplificado)
+      return walletData.criptosCompradas.filter(cripto => cripto.nome === 'Ethereum').length || 0;
+    }
+    return 0;
   }
 
   return (
     <View style={styles.container}>
       <View style={styles.tabsContainer}>
-        <TouchableOpacity
-          style={styles.tabButton}
-          onPress={() => setActiveTab('favorites')}
-        >
+        <TouchableOpacity style={styles.tabButton} onPress={() => setActiveTab('favorites')}>
           <Text style={[styles.tabText, activeTab === 'favorites' && styles.activeTabText]}>
             Favorites
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.tabButton}
-          onPress={() => setActiveTab('all')}
-        >
+        <TouchableOpacity style={styles.tabButton} onPress={() => setActiveTab('all')}>
           <Text style={[styles.tabText, activeTab === 'all' && styles.activeTabText]}>
             All crypto
           </Text>
@@ -270,27 +322,49 @@ export default function CryptoList({ walletId, usdBalance, onUpdateWallet }: Cry
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>
-              Quantos {selectedCrypto ? selectedCrypto.nome : 'crypto'} deseja comprar?
-            </Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Digite a quantidade"
-              keyboardType="numeric"
-              value={quantityInput}
-              onChangeText={setQuantityInput}
-            />
-            <View style={styles.modalButtonContainer}>
-              <TouchableOpacity style={styles.modalButton} onPress={handleConfirmPress}>
-                <Text style={styles.modalButtonText}>Confirmar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.modalCancelButton]}
-                onPress={() => setModalVisible(false)}
-              >
-                <Text style={styles.modalButtonText}>Cancelar</Text>
-              </TouchableOpacity>
-            </View>
+            {selectedCrypto && (
+              <>
+                <Text style={styles.modalTitle}>
+                  {action === 'buy' ? `Buy ${selectedCrypto.nome}` : `Sell ${selectedCrypto.nome}`}
+                </Text>
+                {action === 'sell' && (
+                  <Text style={styles.balanceText}>
+                    You have {getCryptoBalance(selectedCrypto.nome).toFixed(2)} {selectedCrypto.sigla}
+                  </Text>
+                )}
+                <Text style={styles.balanceText}>
+                  Total Balance: ${usdBalance.toFixed(2)}
+                </Text>
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder={action === 'buy' ? "Enter quantity to buy" : "Enter quantity to sell"}
+                  keyboardType="numeric"
+                  value={quantityInput}
+                  onChangeText={setQuantityInput}
+                />
+                <View style={styles.modalButtonContainer}>
+                  <TouchableOpacity style={styles.modalButton} onPress={() => handleAction('buy')}>
+                    <Text style={styles.modalButtonText}>Buy</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.modalButton} onPress={() => handleAction('sell')}>
+                    <Text style={styles.modalButtonText}>Sell</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.modalButton} onPress={handleConfirmPress}>
+                    <Text style={styles.modalButtonText}>Confirm</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.modalButton, styles.modalCancelButton]}
+                    onPress={() => {
+                      setModalVisible(false);
+                      setAction(null);
+                      setQuantityInput('');
+                    }}
+                  >
+                    <Text style={styles.modalButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
           </View>
         </View>
       </Modal>
@@ -335,6 +409,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     padding: 10,
     borderRadius: 8,
+    backgroundColor: '#1a1a1a',
   },
   favoriteItemRow: {
     flexDirection: 'row',
@@ -342,6 +417,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     padding: 10,
     borderRadius: 8,
+    backgroundColor: '#1a1a1a',
   },
   cryptoImage: {
     width: 25,
@@ -400,6 +476,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginBottom: 10,
     textAlign: 'center',
+    color: '#000',
+  },
+  balanceText: {
+    fontSize: 16,
+    color: '#000',
+    marginBottom: 10,
+    textAlign: 'center',
   },
   modalInput: {
     borderWidth: 1,
@@ -412,18 +495,20 @@ const styles = StyleSheet.create({
   modalButtonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
+    flexWrap: 'wrap',
   },
   modalButton: {
     backgroundColor: '#1E90FF',
     paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingHorizontal: 15,
     borderRadius: 5,
+    marginVertical: 5,
   },
   modalCancelButton: {
     backgroundColor: '#ff4444',
   },
   modalButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 14,
   },
 });
